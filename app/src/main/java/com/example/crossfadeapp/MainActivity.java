@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             @Override
             public void onClick(View v) {
                 if (audio1IsConfigured && audio2IsConfigured) {
+
                     //Thread, what manages songs
                     playThread playThread = new playThread();
                     playThread.start();
@@ -130,7 +131,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 }else{
                     Toast.makeText(getApplicationContext(), R.string.bt_mix_exception, Toast.LENGTH_SHORT).show();
                 }
+
             }
+
         });
     }
     //Thread, what manages songs
@@ -150,20 +153,18 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         }
         @Override
         public void run() {
-            playSong(mediaPlayer1, 0, crossfadeDuration / 2);
+            playSong(mediaPlayer1, 0, crossfadeDuration);
             try {
                 while (true) {
                     initMediaPlayer1();
                     isCrossfade1 = true;
                     Thread.sleep(crossfadeDuration);
-                    initMediaPlayer1();
                     initMediaPlayer2();
                     playSong(mediaPlayer2, crossfadeDuration , crossfadeDuration );
                     initMediaPlayer2();
                     isCrossfade2 = true;
                     Thread.sleep(crossfadeDuration);
                     initMediaPlayer1();
-                    initMediaPlayer2();
                     playSong(mediaPlayer1, crossfadeDuration , crossfadeDuration);
                 }
             } catch (InterruptedException e) {
@@ -265,17 +266,18 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     }
 
 
-    private void crossfade(MediaPlayer mediaPlayer1, MediaPlayer mediaPlayer2) {
-       fadeOut(mediaPlayer1, crossfadeDuration);
-       fadeIn(mediaPlayer2, crossfadeDuration);
+    private void crossfade(MediaPlayer mp1, MediaPlayer mp2) {
+       fadeOut(mp1, crossfadeDuration);
+       fadeIn(mp2, crossfadeDuration);
     }
+
     public void fadeOut(final MediaPlayer _player, final int duration) {
         final float deviceVolume = getDeviceVolume();
         final Handler h = new Handler();
+        _player.seekTo(_player.getDuration() - duration);
         h.postDelayed(new Runnable() {
             private float time = duration;
             private float volume = 0.0f;
-
             @Override
             public void run() {
                 if (!_player.isPlaying())
