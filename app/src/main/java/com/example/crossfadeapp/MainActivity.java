@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -179,14 +180,14 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             try {
                 audio1Path = data.getData(); //The uri with the location of the file
                 initMediaPlayer1();
-                audio1Name = getNameFromUri(getApplicationContext(), audio1Path);
+                audio1Name = getNameFromUri(audio1Path);
                 audio1Duraion = mediaPlayer1.getDuration();
                 audio1DuraionString = getTimeFromDuration(audio1Duraion);
                 tv_audio1Name.setText(audio1Name);
                 tv_audio1Duration.setText(audio1DuraionString);
                 audio1IsConfigured = true;
-            }catch (NullPointerException e){
-                Toast.makeText(getApplicationContext(), R.string.bt_audio_exception, Toast.LENGTH_LONG).show();
+            }catch (Exception e){
+                Toast.makeText(getApplicationContext(), "Choose AUDIOfile!", Toast.LENGTH_LONG);
             }
         }
         //Second track`s block setup
@@ -194,14 +195,14 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             try {
                 audio2Path = data.getData(); //The uri with the location of the file
                 initMediaPlayer2();
-                audio2Name = getNameFromUri(getApplicationContext(), audio2Path);
+                audio2Name = getNameFromUri(audio2Path);
                 audio2Duraion = mediaPlayer2.getDuration();
                 audio2DuraionString = getTimeFromDuration(audio2Duraion);
                 tv_audio2Name.setText(audio2Name);
                 tv_audio2Duration.setText(audio2DuraionString);
                 audio2IsConfigured = true;
-            }catch (NullPointerException e){
-                Toast.makeText(getApplicationContext(), R.string.bt_audio_exception, Toast.LENGTH_LONG).show();
+            }catch (Exception e){
+                Toast.makeText(getApplicationContext(), "Choose AUDIOfile!", Toast.LENGTH_LONG);
             }
         }
     }
@@ -241,44 +242,28 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     }
 
 
-    //Converting Uri to String
-    public String getStringFromUri(final Context context, final Uri uri) {
-        if ("com.android.providers.media.documents".equals(uri.getAuthority())) {
-            final String docId = DocumentsContract.getDocumentId(uri);
-            final String[] split = docId.split(":");
-            final String type = split[0];
-            Uri contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-            final String selection = "_id=?";
-            final String[] selectionArgs = new String[]{
-                    split[1]
-            };
-            return getDataColumn(context, contentUri, selection, selectionArgs);
-        }
-        return null;
-    }
-    public String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs){
-        Cursor cursor = null;
-        final String column = "_data";
-        final String[] projection = {column};
-        try {
-            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
-                    null);
-            if (cursor != null && cursor.moveToFirst()) {
-                final int index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(index);
-            }
-        } finally {
-            if (cursor != null)
+    public String getNameFromUri(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
                 cursor.close();
+            }
         }
-        return null;
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
 
-    //Receiving filename from Uri
-    public String getNameFromUri(final Context context, final Uri uri) {
-        String[] buffer = getStringFromUri(context, uri).split("/");
-        return buffer[buffer.length-1];
-    }
 
     private void crossfade(MediaPlayer mediaPlayer1, MediaPlayer mediaPlayer2) {
        fadeOut(mediaPlayer1, crossfadeDuration);
