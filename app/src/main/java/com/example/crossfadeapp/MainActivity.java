@@ -286,11 +286,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 time -= 100;
                 volume = (deviceVolume * time) / duration;
                 _player.setVolume(volume, volume);
-                if (time > 0)
+                if (time >= 100)
                     h.postDelayed(this, 100);
+                else if ((time < 100) && (time > 0)){
+                    h.postDelayed(this, (long) time);
+                }
                 else {
                     _player.stop();
-                    _player.release();
                 }
             }
         }, 100); // 1 second delay (takes millis)
@@ -312,9 +314,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 _player.setVolume(volume, volume);
                 if (time < duration)
                     h.postDelayed(this, 100);
+                else if ((duration - time < 100) && (duration - time > 0))
+                    h.postDelayed(this, (long) time);
+
                 else {
                     _player.stop();
-                    _player.release();
                 }
             }
         }, 100); // 1 second delay (takes millis)
