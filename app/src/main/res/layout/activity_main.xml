@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id = "@+id/ll_audios">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="210dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/bt_audio1Set"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/bt_audio1Set"/>
+
+            <TextView
+                android:id="@+id/tv_audio1Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:layout_gravity="center"
+                android:text="@string/tv_audio1Name"
+                android:textSize="8pt" />
+
+            <TextView
+                android:id="@+id/tv_audio1Duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:textSize="10pt"
+                android:text="0:00" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="210dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/bt_audio2Set"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/bt_audio2Set" />
+
+            <TextView
+                android:id="@+id/tv_audio2Name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="@string/tv_audio2Name"
+                android:layout_gravity="center"
+                android:textSize="8pt" />
+
+            <TextView
+                android:id="@+id/tv_audio2Duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="10pt"
+                android:layout_gravity="center"
+                android:text="0:00" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:id ="@+id/tv_seekInfo"
+        android:layout_below="@id/ll_audios"
+        android:text="@string/tv_seekInfo"
+        android:textSize="14pt"
+        />
+
+    <SeekBar
+        android:id="@+id/sb_crossFadeTime"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:layout_below="@id/tv_seekInfo"
+        android:max="8"
+        android:progress="8" />
+
+    <TextView
+        android:id="@+id/tv_seekDynamic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/sb_crossFadeTime"
+        android:gravity="center"
+        android:text="@string/tv_seekDynamic"
+        android:textSize="14pt" />
+
+    <Button
+        android:id="@+id/bt_mix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_seekDynamic"
+        android:layout_marginTop="2dp"
+        android:layout_centerInParent="true"
+        android:text="@string/bt_mix"
+        android:textSize="25pt" />
+
+
+</RelativeLayout>

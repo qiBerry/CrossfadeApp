@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">CrossfadeApp</string>
+    <string name="bt_audio1Set">Select first track</string>
+    <string name="bt_audio2Set">Select second track</string>
+    <string name="tv_audio1Name">Name</string>
+    <string name="tv_audio2Name">Name</string>
+    <string name="tv_seekInfo">Crossfade time \n (from 2 to 10 seconds)</string>
+    <string name="bt_mix">Play!</string>
+    <string name="tv_seekDynamic">10 seconds</string>
+    <string name="bt_mix_exception">Choose audiofiles!</string>
+    <string name="bt_audio_exception">Choose AUDIOfile!</string>
+</resources>
