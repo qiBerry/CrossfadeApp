@@ -9,4 +9,5 @@
     <string name="tv_seekDynamic">10 seconds</string>
     <string name="bt_mix_exception">Choose audiofiles!</string>
     <string name="bt_audio_exception">Choose AUDIOfile!</string>
+    <string name="bt_duration_exception">Audiofiles too short for chosed crossfade time!</string>
 </resources>

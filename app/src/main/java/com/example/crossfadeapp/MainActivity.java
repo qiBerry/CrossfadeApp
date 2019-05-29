@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         bt_mix.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (audio1IsConfigured && audio2IsConfigured) {
+                if (((audio1IsConfigured && audio2IsConfigured)) && ((audio1Duraion > crossfadeDuration*2) && (audio2Duraion > crossfadeDuration*2))) {
 
                     //Thread, what manages songs
                     playThread playThread = new playThread();
@@ -128,8 +128,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                             h.postDelayed(this, 50);
                         }
                     }, 50);
-                }else{
+                }else if (!(audio1IsConfigured && audio2IsConfigured)){
                     Toast.makeText(getApplicationContext(), R.string.bt_mix_exception, Toast.LENGTH_SHORT).show();
+                }else if ((audio1Duraion <= crossfadeDuration*2) || audio2Duraion <= crossfadeDuration*2){
+                    Toast.makeText(getApplicationContext(), R.string.bt_duration_exception, Toast.LENGTH_LONG).show();
                 }
 
             }
