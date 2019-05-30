@@ -39,8 +39,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     //Creating variables
     private String audio1Name;
     private Uri audio1Path;
-    private Integer audio1Duraion;
-    private String audio1DuraionString;
+    private Integer audio1Duration;
+    private String audio1DurationString;
     private Button bt_audio1Set;
     private TextView tv_audio1Name;
     private TextView tv_audio1Duration;
@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
     private String audio2Name;
     private Uri audio2Path;
-    private Integer audio2Duraion;
-    private String audio2DuraionString;
+    private Integer audio2Duration;
+    private String audio2DurationString;
     private Button bt_audio2Set;
     private TextView tv_audio2Name;
     private TextView tv_audio2Duration;
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     private MediaPlayer mediaPlayer;
     private SeekBar sb_crossfadeTime;
     private TextView tv_seekDynamic;
-    private Integer crossfadeDuration = 10000;
+    private Integer crossfadeDuration;
     private Button bt_mix;
     public boolean isCrossfade1 = false;
     public boolean isCrossfade2 = false;
@@ -87,7 +87,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         ActivityCompat.requestPermissions(MainActivity.this,
                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
 
+        //Setup of mediaplayer
         crossfadePlayer = new CrossfadePlayer(getApplicationContext());
+        //Default duration
+        crossfadeDuration = 10;
 
         //Associating buttons with listeners
         bt_audio1Set.setOnClickListener(new View.OnClickListener() {
@@ -113,12 +116,12 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         bt_mix.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (((audio1IsConfigured && audio2IsConfigured)) && ((audio1Duraion > crossfadeDuration*2) && (audio2Duraion > crossfadeDuration*2))) {
+                if (((audio1IsConfigured && audio2IsConfigured)) && ((audio1Duration > crossfadeDuration*2*1000) && (audio2Duration > crossfadeDuration*2*1000))) {
                     crossfadePlayer.start();
                     crossfadePlayer.setCrossfadeTime(crossfadeDuration);
                 }else if (!(audio1IsConfigured && audio2IsConfigured)){
                     Toast.makeText(getApplicationContext(), R.string.bt_mix_exception, Toast.LENGTH_SHORT).show();
-                }else if ((audio1Duraion <= crossfadeDuration*2) || audio2Duraion <= crossfadeDuration*2){
+                }else if ((audio1Duration <= crossfadeDuration*2*1000) || audio2Duration <= crossfadeDuration*2*1000){
                     Toast.makeText(getApplicationContext(), R.string.bt_duration_exception, Toast.LENGTH_LONG).show();
                 }
 
@@ -146,10 +149,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 audio1Path = data.getData(); //The uri with the location of the file
                 initMediaPlayer(audio1Path);
                 audio1Name = getNameFromUri(audio1Path);
-                audio1Duraion = mediaPlayer.getDuration();
-                audio1DuraionString = getTimeFromDuration(audio1Duraion);
+                audio1Duration = mediaPlayer.getDuration();
+                audio1DurationString = getTimeFromDuration(audio1Duration);
                 tv_audio1Name.setText(audio1Name);
-                tv_audio1Duration.setText(audio1DuraionString);
+                tv_audio1Duration.setText(audio1DurationString);
                 crossfadePlayer.setFirstTrack(audio1Path);
                 audio1IsConfigured = true;
             }catch (Exception e){
@@ -162,10 +165,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 audio2Path = data.getData(); //The uri with the location of the file
                 initMediaPlayer(audio2Path);
                 audio2Name = getNameFromUri(audio2Path);
-                audio2Duraion = mediaPlayer.getDuration();
-                audio2DuraionString = getTimeFromDuration(audio2Duraion);
+                audio2Duration = mediaPlayer.getDuration();
+                audio2DurationString = getTimeFromDuration(audio2Duration);
                 tv_audio2Name.setText(audio2Name);
-                tv_audio2Duration.setText(audio2DuraionString);
+                tv_audio2Duration.setText(audio2DurationString);
                 crossfadePlayer.setSecondTrack(audio2Path);
                 audio2IsConfigured = true;
             }catch (Exception e){
