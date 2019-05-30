@@ -1,15 +1,19 @@
 package com.example.crossfadeapp;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.database.Cursor;
+import android.media.AsyncPlayer;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.media.TimedMetaData;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -51,15 +55,15 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     private TextView tv_audio2Duration;
     private boolean audio2IsConfigured;
 
-    private MediaPlayer mediaPlayer1;
-    private MediaPlayer mediaPlayer2;
+    private MediaPlayer mediaPlayer;
     private SeekBar sb_crossfadeTime;
     private TextView tv_seekDynamic;
     private Integer crossfadeDuration = 10000;
     private Button bt_mix;
     public boolean isCrossfade1 = false;
     public boolean isCrossfade2 = false;
-
+    public boolean isPlaying = false;
+    private CrossfadePlayer crossfadePlayer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         //Accessing for permissions
         ActivityCompat.requestPermissions(MainActivity.this,
                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+
+        crossfadePlayer = new CrossfadePlayer(getApplicationContext());
 
         //Associating buttons with listeners
         bt_audio1Set.setOnClickListener(new View.OnClickListener() {
@@ -108,26 +114,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             @Override
             public void onClick(View v) {
                 if (((audio1IsConfigured && audio2IsConfigured)) && ((audio1Duraion > crossfadeDuration*2) && (audio2Duraion > crossfadeDuration*2))) {
-
-                    //Thread, what manages songs
-                    playThread playThread = new playThread();
-                    playThread.start();
-
-                    //Handler manages crossfades
-                    final Handler h = new Handler();
-                    h.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (isCrossfade1) {
-                                isCrossfade1 = false;
-                                crossfade(mediaPlayer1, mediaPlayer2);
-                            } else if (isCrossfade2) {
-                                isCrossfade2 = false;
-                                crossfade(mediaPlayer2, mediaPlayer1);
-                            }
-                            h.postDelayed(this, 50);
-                        }
-                    }, 50);
+                    crossfadePlayer.start();
+                    crossfadePlayer.setCrossfadeTime(crossfadeDuration);
                 }else if (!(audio1IsConfigured && audio2IsConfigured)){
                     Toast.makeText(getApplicationContext(), R.string.bt_mix_exception, Toast.LENGTH_SHORT).show();
                 }else if ((audio1Duraion <= crossfadeDuration*2) || audio2Duraion <= crossfadeDuration*2){
@@ -138,43 +126,17 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
         });
     }
-    //Thread, what manages songs
-    public class playThread extends Thread {
 
-        public void playSong(final MediaPlayer mediaPlayer, int startDelay, final int finishDelay){
-            final int duration = mediaPlayer.getDuration();
-            mediaPlayer.seekTo(startDelay);
-            mediaPlayer.start();
-            try {
-                Thread.sleep(duration - mediaPlayer.getCurrentPosition() - finishDelay);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            mediaPlayer.stop();
-            mediaPlayer.release();
-        }
-        @Override
-        public void run() {
-            playSong(mediaPlayer1, 0, crossfadeDuration);
-            try {
-                while (true) {
-                    initMediaPlayer1();
-                    isCrossfade1 = true;
-                    Thread.sleep(crossfadeDuration);
-                    initMediaPlayer2();
-                    playSong(mediaPlayer2, crossfadeDuration , crossfadeDuration );
-                    initMediaPlayer2();
-                    isCrossfade2 = true;
-                    Thread.sleep(crossfadeDuration);
-                    initMediaPlayer1();
-                    playSong(mediaPlayer1, crossfadeDuration , crossfadeDuration);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+    public void initMediaPlayer(Uri uri){
+        try{
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDataSource(MainActivity.this, uri);
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mediaPlayer.prepare();
+        }catch (IOException e){
+
         }
     }
-
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -182,12 +144,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         if (requestCode == 1 && resultCode == RESULT_OK) {
             try {
                 audio1Path = data.getData(); //The uri with the location of the file
-                initMediaPlayer1();
+                initMediaPlayer(audio1Path);
                 audio1Name = getNameFromUri(audio1Path);
-                audio1Duraion = mediaPlayer1.getDuration();
+                audio1Duraion = mediaPlayer.getDuration();
                 audio1DuraionString = getTimeFromDuration(audio1Duraion);
                 tv_audio1Name.setText(audio1Name);
                 tv_audio1Duration.setText(audio1DuraionString);
+                crossfadePlayer.setFirstTrack(audio1Path);
                 audio1IsConfigured = true;
             }catch (Exception e){
                 Toast.makeText(getApplicationContext(), "Choose AUDIOfile!", Toast.LENGTH_LONG);
@@ -197,39 +160,17 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         if (requestCode == 2 && resultCode == RESULT_OK) {
             try {
                 audio2Path = data.getData(); //The uri with the location of the file
-                initMediaPlayer2();
+                initMediaPlayer(audio2Path);
                 audio2Name = getNameFromUri(audio2Path);
-                audio2Duraion = mediaPlayer2.getDuration();
+                audio2Duraion = mediaPlayer.getDuration();
                 audio2DuraionString = getTimeFromDuration(audio2Duraion);
                 tv_audio2Name.setText(audio2Name);
                 tv_audio2Duration.setText(audio2DuraionString);
+                crossfadePlayer.setSecondTrack(audio2Path);
                 audio2IsConfigured = true;
             }catch (Exception e){
                 Toast.makeText(getApplicationContext(), "Choose AUDIOfile!", Toast.LENGTH_LONG);
             }
-        }
-    }
-
-    //Configuring first track`s mediaplayer
-    public void initMediaPlayer1(){
-        try{
-            mediaPlayer1 = new MediaPlayer();
-            mediaPlayer1.setDataSource(MainActivity.this, audio1Path);
-            mediaPlayer1.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayer1.prepare();
-        }catch (IOException e){
-
-        }
-    }
-    //Configuring second track`s mediaplayer
-    public void initMediaPlayer2(){
-        try{
-            mediaPlayer2 = new MediaPlayer();
-            mediaPlayer2.setDataSource(MainActivity.this, audio2Path);
-            mediaPlayer2.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayer2.prepare();
-        }catch (IOException e){
-
         }
     }
 
@@ -267,82 +208,16 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         return result;
     }
 
-
-    private void crossfade(MediaPlayer mp1, MediaPlayer mp2) {
-       fadeOut(mp1, crossfadeDuration);
-       fadeIn(mp2, crossfadeDuration);
-    }
-
-    public void fadeOut(final MediaPlayer _player, final int duration) {
-        final float deviceVolume = getDeviceVolume();
-        final Handler h = new Handler();
-        _player.seekTo(_player.getDuration() - duration);
-        h.postDelayed(new Runnable() {
-            private float time = duration;
-            private float volume = 0.0f;
-            @Override
-            public void run() {
-                if (!_player.isPlaying())
-                    _player.start();
-                // can call h again after work!
-                time -= 100;
-                volume = (deviceVolume * time) / duration;
-                _player.setVolume(volume, volume);
-                if (time >= 100)
-                    h.postDelayed(this, 100);
-                else if ((time < 100) && (time > 0)){
-                    h.postDelayed(this, (long) time);
-                }
-                else {
-                    _player.stop();
-                }
-            }
-        }, 100); // 1 second delay (takes millis)
-    }
-    public void fadeIn(final MediaPlayer _player, final int duration) {
-        final float deviceVolume = getDeviceVolume();
-        final Handler h = new Handler();
-        h.postDelayed(new Runnable() {
-            private float time = 0.0f;
-            private float volume = 0.0f;
-
-            @Override
-            public void run() {
-                if (!_player.isPlaying())
-                    _player.start();
-                // can call h again after work!
-                time += 100;
-                volume = (deviceVolume * time) / duration;
-                _player.setVolume(volume, volume);
-                if (time < duration)
-                    h.postDelayed(this, 100);
-                else if ((duration - time < 100) && (duration - time > 0))
-                    h.postDelayed(this, (long) time);
-
-                else {
-                    _player.stop();
-                }
-            }
-        }, 100); // 1 second delay (takes millis)
-
-    }
-
-    public float getDeviceVolume() {
-        AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-        int volumeLevel = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        return (float) volumeLevel / maxVolume;
-    }
-//Managing seekbar
+    //Managing seekbar
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        crossfadeDuration = (sb_crossfadeTime.getProgress() + 2)*1000;
-        tv_seekDynamic.setText(String.valueOf(crossfadeDuration/1000) + " seconds");
+        crossfadeDuration = sb_crossfadeTime.getProgress() + 2;
+        tv_seekDynamic.setText(String.valueOf(crossfadeDuration) + " seconds");
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-   }
+    }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
