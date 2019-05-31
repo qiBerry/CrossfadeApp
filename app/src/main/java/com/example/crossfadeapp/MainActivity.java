@@ -1,31 +1,17 @@
 package com.example.crossfadeapp;
 
 import android.Manifest;
-import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetManager;
 import android.database.Cursor;
-import android.media.AsyncPlayer;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.media.TimedMetaData;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Handler;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.GetChars;
-import android.util.Log;
-import android.view.GestureDetector;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -60,9 +46,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     private TextView tv_seekDynamic;
     private Integer crossfadeDuration;
     private Button bt_mix;
-    public boolean isCrossfade1 = false;
-    public boolean isCrossfade2 = false;
-    public boolean isPlaying = false;
     private CrossfadePlayer crossfadePlayer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,21 +79,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         bt_audio1Set.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent()
-                        .setType("*/*")
-                        .setAction(Intent.ACTION_GET_CONTENT);
-
-                startActivityForResult(Intent.createChooser(intent, "Select a file"), 1);
+                selectTrack(Settings.FileRequestType.FIRST_TRACK);
             }
         });
         bt_audio2Set.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent()
-                        .setType("*/*")
-                        .setAction(Intent.ACTION_GET_CONTENT);
-
-                startActivityForResult(Intent.createChooser(intent, "Select a file"), 2);
+                selectTrack(Settings.FileRequestType.SECOND_TRACK);
             }
         });
         bt_mix.setOnClickListener(new View.OnClickListener() {
@@ -130,6 +105,14 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         });
     }
 
+    public void selectTrack(int requestCode) {
+        Intent intent = new Intent()
+                .setType("*/*")
+                .setAction(Intent.ACTION_GET_CONTENT);
+
+        startActivityForResult(Intent.createChooser(intent, "Select a file"), requestCode);
+    }
+
     public void initMediaPlayer(Uri uri){
         try{
             mediaPlayer = new MediaPlayer();
@@ -144,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         //First track`s block setup
-        if (requestCode == 1 && resultCode == RESULT_OK) {
+        if (requestCode == Settings.FileRequestType.FIRST_TRACK && resultCode == RESULT_OK) {
             try {
                 audio1Path = data.getData(); //The uri with the location of the file
                 initMediaPlayer(audio1Path);
@@ -160,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             }
         }
         //Second track`s block setup
-        if (requestCode == 2 && resultCode == RESULT_OK) {
+        if (requestCode == Settings.FileRequestType.SECOND_TRACK && resultCode == RESULT_OK) {
             try {
                 audio2Path = data.getData(); //The uri with the location of the file
                 initMediaPlayer(audio2Path);
